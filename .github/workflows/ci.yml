@@ -25,11 +25,18 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Type check
+      - name: Type check review comments
+        # Inline PR comments only. Skipped on pushes (reviewdog can't post there)
+        # and on PRs from forks (their token is read-only). The step below is
+        # what actually passes or fails the job.
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
         uses: EPMatt/reviewdog-action-tsc@v1
         with:
           reporter: github-pr-review
-          fail_on_error: true
+          fail_level: none
+
+      - name: Type check
+        run: bun run typecheck
 
   lint:
     name: Lint
@@ -44,11 +51,18 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Lint
+      - name: Lint review comments
+        # Inline PR comments only. Skipped on pushes (reviewdog can't post there)
+        # and on PRs from forks (their token is read-only). The step below is
+        # what actually passes or fails the job.
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
         uses: mongolyy/reviewdog-action-biome@v1
         with:
           reporter: github-pr-review
-          fail_on_error: true
+          fail_level: none
+
+      - name: Lint
+        run: bunx biome ci .
 
   build:
     name: Build
